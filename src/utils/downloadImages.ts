@@ -6,17 +6,17 @@ import imageType from 'image-type'
 
 import { ImageFill } from '.'
 
-export const downloadImage = function(url: string, outFile: string) {
+export const downloadImage = function (url: string, outFile: string) {
   const file = fs.createWriteStream(outFile)
 
   https
-    .get(url, function(response) {
+    .get(url, function (response: any) {
       response.pipe(file)
-      file.on('finish', function() {
+      file.on('finish', function () {
         file.close()
       })
     })
-    .on('error', function(err) {
+    .on('error', function (err: any) {
       fs.unlink(outFile, () => {}) // Delete the file async.
       throw err
     })
@@ -28,7 +28,7 @@ export const downloadFillImage = (
 ) => {
   return new Promise<string>((resolve) => {
     // figure out the file type
-    https.get(image.url, (response) => {
+    https.get(image.url, (response: any) => {
       response.on('readable', () => {
         const chunk = response.read(imageType.minimumBytes)
         response.destroy()

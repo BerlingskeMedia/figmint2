@@ -104,7 +104,8 @@ export type FigmintExportType = {
 export type FigmintOutput = {
   fillStyles: FigmintFillStyleType[]
   textStyles: FigmintTypeStyleType[]
-  effectStyles: FigmintEffectStyleType[]
+  // effectStyles: FigmintEffectStyleType[]
+  effectStyles: any[]
   gridStyles: any[]
   exports: FigmintExportType
 }

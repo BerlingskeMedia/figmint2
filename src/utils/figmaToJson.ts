@@ -8,6 +8,7 @@ import {
   FigmintOutput,
   FigmintSolid,
   FigmintGradient,
+  FigmintEffectStyleType,
 } from './'
 
 export const figmaToJson = (figmaObject: RawStyleObject): FigmintOutput => {
@@ -125,7 +126,7 @@ export const figmaToJson = (figmaObject: RawStyleObject): FigmintOutput => {
 
             if (effect.color) baseEffect.color = figmaColorToHSL(effect.color)
 
-            return baseEffect
+            return baseEffect as FigmintEffectStyleType
           }),
         })
 
