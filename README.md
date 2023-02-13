@@ -132,13 +132,11 @@ It is also possible to run the CLI in watch mode. This will update your json as 
 
 #### Watch interval
 
-Currently watch mode will overrite the output every second (`1000` ms by default). This interval can be customized by setting the `FIGMINT_INTERVAL_SECS` env variable or passing `intervalSecs` as a prop to the `Output` Component.
-
-Depending on your dev enviroment this may cause your site to reload more than expected.
+Currently watch mode will check Figma every minute (`60000` ms by default) and write to the `output` destination if any changes were detected. This interval can be customized by setting the `FIGMINT_INTERVAL_SECS` env variable or passing `intervalSecs` as a prop to the `Output` Component.
 
 ### Writing changes
 
-Figmint writes only files that have changed, by comparing old file content with new content and ensuring they are not identical.
+Figmint only writes a new `index`at the destination if the file content has changed, simply by comparing old file content with new content and ensuring they are not identical.
 
 ## Config format
 

@@ -76,7 +76,9 @@ type OutputProps = {
 
 const Output = ({ intervalSecs }: OutputProps) => {
   const intervalInSecs =
-    intervalSecs || parseInt(process.env.FIGMINT_INTERVAL_SECS + '') || 1000
+    intervalSecs ||
+    parseInt(process.env.FIGMINT_INTERVAL_SECS + '') ||
+    60 * 1000
   // 📝 State
   // --------
 

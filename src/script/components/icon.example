@@ -1,0 +1,54 @@
+// see https://medium.com/iadvize-engineering/using-figma-api-to-extract-illustrations-and-icons-34e0c7c230fa
+
+type Props<T extends IconSize> = {
+    title?: string;
+    size: T;
+    name: IconName<T>;
+    color?: Color;
+  };
+
+  const craftUri = <T extends IconSize>(size: T,name: IconName<T>)
+  => `${publicPath}/${ICON[size][name]}.svg`;
+
+  export function Icon<T extends IconSize>({
+    title,
+    size,
+    name,
+    color,
+  }: Props<T>) {
+    const url = craftUri(name, size);
+    const [icon, setIcon] = useState<string>(cache.get(url) || '');
+  
+    useEffect(() => {
+      let cancelFetch = false;
+      fetchSvg(name, size)
+        .then(value => {
+          if (!cancelFetch) {
+            setIcon(value as string);
+          }
+        });
+      return () => {
+        cancelFetch = true;
+      };
+    }, [size, name]);
+  
+    return (
+      <span
+        aria-label={title}
+        aria-hidden={!title}
+        role="img"
+        style={{
+        width: `${ICON_SIZE[size]}rem`,
+        height: `${ICON_SIZE[size]}rem`,
+        fontSize: `${ICON_SIZE[size]}rem`,
+        display: 'inline-flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 'none',
+        overflow: 'hidden',
+        color: color ? color : 'currentColor',
+        }}
+        dangerouslySetInnerHTML={{ __html: icon }}
+      />
+    );
+  }

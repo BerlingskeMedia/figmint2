@@ -1,0 +1,16 @@
+// see https://medium.com/iadvize-engineering/using-figma-api-to-extract-illustrations-and-icons-34e0c7c230fa
+
+type Props = {
+    title: string;
+    name: IllustrationName;
+    width?: string;
+    height?: string;
+  };
+
+
+const craftUri = (name: IllustrationName) =>
+`${publicPath}/${ILLUSTRATION[name]}.svg`;
+
+export const Illustration = React.memo(({ title, name, width, height }: Props) => (
+    <img src={craftUri(name)} alt={title} width={width} height={height} />
+  ));
