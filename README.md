@@ -89,6 +89,39 @@ Then visit the example page at [http://localhost:1234](http://localhost:1234).
 
 You can connect the example to your own figma file by editing `.figmintrc.json` in the `example` directory. Just add your own `token` and `file` before running `yarn figmint`.
 
+### Scripts
+
+#### fetchData
+
+`fetchData` fetches figma data from a library via a `Figma.ClientInterface` and stores the results to an `output` file destination as one or more files.
+
+```ts
+export interface FetchData {
+  client: Figma.ClientInterface,
+  file: string,
+  output: string,
+  setFileName: (fileName: string) => void,
+  setLoading: (loading: boolean) => void,
+  setFills: (fills: FigmintFillStyleType[]) => void,
+  setTypography: (typography: FigmintTypeStyleType[]) => void,
+  setExports: (exports: FigmintExportType) => void,
+  typescript?: boolean,
+}
+
+export const fetchData = async ({
+  client,
+  file,
+  output,
+  setFileName,
+  setLoading,
+  // set our local state
+  setFills,
+  setTypography,
+  setExports,
+  typescript,
+}: FetchData): Promise<void>
+```
+
 ## CLI
 
 The CLI for figmint is pretty simple, just run `yarn figmint` or `npm run figmint` in your project after it is installed.
@@ -97,9 +130,15 @@ The CLI for figmint is pretty simple, just run `yarn figmint` or `npm run figmin
 
 It is also possible to run the CLI in watch mode. This will update your json as things change on figma without you needing to re-run the command.
 
-🚨*Notes*:
+#### Watch interval
 
-- Currently watch mode will overrite the output every second. Depending on your dev enviroment this may cause your site to reload more than expected. Ideally figmint would only write files that have chagned. PR's welcome!
+Currently watch mode will overrite the output every second (`1000` ms by default). This interval can be customized by setting the `FIGMINT_INTERVAL_SECS` env variable or passing `intervalSecs` as a prop to the `Output` Component.
+
+Depending on your dev enviroment this may cause your site to reload more than expected.
+
+### Writing changes
+
+Figmint writes only files that have changed, by comparing old file content with new content and ensuring they are not identical.
 
 ## Config format
 

@@ -1,192 +1,31 @@
 import * as Figma from 'figma-js'
-import util from 'util'
 import fs from 'fs'
-import path from 'path'
-import rimraf from 'rimraf'
 import prettier from 'prettier'
 import { exportFormatOptions } from 'figma-js'
 import camelCase from 'camelcase'
-import { downloadFillImage, figmaToJson } from '../utils'
 import {
-  RawStyleObject,
-  RawStyleType,
-  ExportsObject,
-  PartialFigmintExportType,
   FigmintGradient,
   BaseTypeStyleType,
   BaseEffectStyleType,
   FigmintExportType,
+  FigmintFillStyleType,
+  FigmintTypeStyleType,
 } from '../utils/types'
 import { fetchImageUrls } from './images'
+import { getStylesFromFile } from './style'
+import { DownloadListType } from './types'
+import { writeToFile } from './write-file'
 
-type DownloadListType = {
-  [formatScale: string]: PartialFigmintExportType[]
-}
-
-type FinalExportsType = {
-  [page: string]: {
-    [fileName: string]: {
-      svg?: PartialFigmintExportType
-      pdf?: PartialFigmintExportType
-      png?: {
-        [scale: number]: PartialFigmintExportType
-      }
-      jpg?: {
-        [scale: number]: PartialFigmintExportType
-      }
-    }
-  }
-}
-
-// work through the node and its children to attach all style definitions to the style types
-const findStyleInNode = (
-  keysToFind: string[],
-  node: Figma.Node,
-  canvas?: Figma.Canvas,
-  parent?: Figma.Node,
-  styles: RawStyleObject = {},
-  exports: ExportsObject = {},
-) => {
-  let finalStyles = styles
-  let finalExports = exports
-
-  let canvasNode: Figma.Canvas | undefined = canvas
-
-  if (node.type === 'CANVAS') canvasNode = node
-
-  if (
-    'exportSettings' in node &&
-    node.exportSettings !== undefined &&
-    node.exportSettings.length > 0
-  ) {
-    finalExports[node.id] = {
-      exportInfo: node.exportSettings,
-      name: node.name,
-      page: canvas ? canvas.name : 'undefined',
-      folder: parent ? parent.name : 'ungrouped',
-    }
-  }
-  if ('styles' in node && node.styles !== undefined) {
-    Object.entries(node.styles).forEach(([styleType, key]: any) => {
-      if (!(key in styles)) {
-        finalStyles[key] = {} as RawStyleType
-
-        const setStyleProps = ({ styles, key, props }: any) => {
-          if (!styles[key]) return
-          styles[key].props = props
-        }
-
-        switch (styleType) {
-          case 'text':
-            if ('style' in node) {
-              setStyleProps({ styles, key, props: node.style })
-            }
-            break
-          case 'grid':
-            if ('layoutGrids' in node && node.layoutGrids !== undefined) {
-              setStyleProps({ styles, key, props: node.layoutGrids })
-            }
-            break
-          case 'background':
-            if ('background' in node) {
-              setStyleProps({ styles, key, props: node.background })
-            }
-            break
-          case 'stroke':
-            if ('strokes' in node) {
-              setStyleProps({ styles, key, props: node.strokes })
-            }
-            break
-          case 'fill':
-            if ('fills' in node) {
-              setStyleProps({ styles, key, props: node.fills })
-            }
-            break
-          case 'effect':
-            if ('effects' in node) {
-              setStyleProps({ styles, key, props: node.effects })
-              styles[key].props = node.effects
-            }
-        }
-      }
-    })
-  }
-
-  if ('children' in node) {
-    node.children.forEach((child: any) => {
-      const { styles: childStyles, exports: childExports } = findStyleInNode(
-        keysToFind,
-        child,
-        canvasNode,
-        node,
-        styles,
-        finalExports,
-      )
-      finalStyles = {
-        ...finalStyles,
-        ...childStyles,
-      }
-      finalExports = {
-        ...finalExports,
-        ...childExports,
-      }
-    })
-  }
-
-  return { styles: finalStyles, exports: finalExports }
-}
-
-export const getStylesFromFile = async (
-  file: Figma.FileResponse,
-  imageFills: Figma.FileImageFillsResponse,
-  output: string,
-) => {
-  const styleDefinitions = Object.keys(file.styles)
-
-  const { styles: styleValues, exports } = findStyleInNode(
-    styleDefinitions,
-    file.document,
-  )
-
-  let fileName: string | undefined
-
-  // download fill images
-
-  const outputDir = path.join(output, 'fillImages')
-
-  // Clear out the output dir if it already exists
-  if (fs.existsSync(outputDir)) {
-    rimraf.sync(outputDir)
-  }
-
-  fs.mkdirSync(outputDir, { recursive: true })
-
-  for (const [key, style] of Object.entries(styleValues)) {
-    // if we're an image fill grab the image url
-    if (file.styles[key].styleType === 'FILL') {
-      const fills = style.props as Figma.Paint[]
-
-      for (const fill of fills) {
-        if (fill.type === 'IMAGE' && fill.imageRef) {
-          fileName = await downloadFillImage(
-            {
-              imageRef: fill.imageRef,
-              url: imageFills.meta.images[fill.imageRef],
-            },
-            outputDir,
-          )
-        }
-      }
-    }
-
-    styleValues[key] = {
-      ...file.styles[key],
-      ...style,
-      ...(fileName ? { fileName } : {}),
-    }
-  }
-
-  return { styles: figmaToJson(styleValues), exports }
+export interface FetchData {
+  client: Figma.ClientInterface
+  file: string
+  output: string
+  setFileName?: (fileName: string) => void
+  setLoading?: (loading: boolean) => void
+  setFills?: (fills: FigmintFillStyleType[]) => void
+  setTypography?: (typography: FigmintTypeStyleType[]) => void
+  setExports?: (exports: FigmintExportType) => void
+  typescript?: boolean
 }
 
 export const fetchData = async ({
@@ -200,14 +39,14 @@ export const fetchData = async ({
   setTypography,
   setExports,
   typescript,
-}: any) => {
+}: FetchData): Promise<void> => {
   if (!client || !file) return
   const [fileResponse, imageFillsResponse] = await Promise.all([
     client.file(file),
     client.fileImageFills(file),
   ])
 
-  setFileName(fileResponse.data.name)
+  setFileName && setFileName(fileResponse.data.name)
 
   // Make sure the output directory exists
   if (!fs.existsSync(output)) {
@@ -287,6 +126,9 @@ export const fetchData = async ({
   // we group these by file type to reduce the number of requests.
 
   styles.exports = (await fetchImageUrls({
+    client,
+    file,
+    output,
     downloadLists,
     finalExports,
   })) as FigmintExportType
@@ -327,63 +169,22 @@ export const fetchData = async ({
 
   const options = await prettier.resolveConfig(output)
 
-  fs.writeFileSync(
-    path.join(output, `index.${typescript ? 'ts' : 'js'}`),
-    prettier.format(
-      `
-      const styles = {
-      colors: ${util.inspect(colors, {
-        depth: Infinity,
-        compact: false,
-        maxArrayLength: null,
-      })},
-      gradients: ${util.inspect(gradients, {
-        depth: Infinity,
-        compact: false,
-        maxArrayLength: null,
-      })},
-      imageFills: ${util.inspect(imageFills, {
-        depth: Infinity,
-        compact: false,
-        maxArrayLength: null,
-      })},
-      textStyles: ${util.inspect(textStyles, {
-        depth: Infinity,
-        compact: false,
-        maxArrayLength: null,
-      })},
-      effectStyles: ${util.inspect(effectStyles, {
-        depth: Infinity,
-        compact: false,
-        maxArrayLength: null,
-      })},
-      raw: ${util.inspect(styles, {
-        depth: Infinity,
-        compact: false,
-        maxArrayLength: null,
-      })},
-      }${typescript ? ' as const' : ''}
+  writeToFile({
+    typescript,
+    options,
+    output,
+    colors,
+    gradients,
+    imageFills,
+    textStyles,
+    effectStyles,
+    styles,
+  })
 
-      ${
-        typescript
-          ? `
-        export type ColorValues = keyof typeof styles.colors
-        export type GradientValues = keyof typeof styles.gradients
-        export type TextValues = keyof typeof styles.textStyles
-        export type EffectValues = keyof typeof styles.effectStyles
-        `
-          : ''
-      }
-
-      export default styles`,
-      { ...options, parser: typescript ? 'typescript' : 'babel' },
-    ),
-  )
-
-  setLoading(false)
+  setLoading && setLoading(false)
 
   // set our local state
-  setFills(styles.fillStyles)
-  setTypography(styles.textStyles)
-  setExports(styles.exports)
+  setFills && setFills(styles.fillStyles)
+  setTypography && setTypography(styles.textStyles)
+  setExports && setExports(styles.exports)
 }

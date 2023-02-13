@@ -70,7 +70,13 @@ const Header = ({ text }: { text: string }) => (
   </Color>
 )
 
-const Output = () => {
+type OutputProps = {
+  intervalSecs?: number
+}
+
+const Output = ({ intervalSecs }: OutputProps) => {
+  const intervalInSecs =
+    intervalSecs || parseInt(process.env.FIGMINT_INTERVAL_SECS + '') || 1000
   // 📝 State
   // --------
 
@@ -421,7 +427,7 @@ const Output = () => {
   }, [client, fetchData])
 
   // 👀 if we're watching, keep fetching
-  useInterval(fetchData, watching ? 1000 : null)
+  useInterval(fetchData, watching ? intervalInSecs : null)
 
   // ⚠️ Error Handling
   // -----------------

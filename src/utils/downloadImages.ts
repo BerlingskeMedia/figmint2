@@ -6,7 +6,7 @@ import imageType from 'image-type'
 
 import { ImageFill } from '.'
 
-export const downloadImage = function (url: string, outFile: string) {
+export const downloadImage = (url: string, outFile: string) => {
   const file = fs.createWriteStream(outFile)
 
   https
