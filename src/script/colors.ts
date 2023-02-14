@@ -1,18 +1,13 @@
 // see https://medium.com/@nicolas.declercq/figma-tokens-automatically-turned-into-code-how-we-kickstarted-our-design-system-f25866c9d842
 
+import { fetchFigmaFile } from './utils'
+
 const { writeFileSync, mkdirSync, readFileSync } = require('fs')
-const nodeFetch = require('node-fetch')
 const TOKEN = process.env.FIGMA_API_TOKEN
 
 const isDefined = (node: any) => node != null
 const isLeaf = (node: any) => isDefined(node) && !('children' in node)
 const isEllipse = (node: any) => isDefined(node) && node.type === 'ELLIPSE'
-
-const fetchFigmaFile = (key: string, token = TOKEN) => {
-  return nodeFetch(`https://api.figma.com/v1/files/${key}`, {
-    headers: { 'X-Figma-Token': token },
-  }).then((response: any) => response.json())
-}
 
 const isColor = isEllipse
 

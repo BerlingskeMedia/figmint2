@@ -20,6 +20,7 @@ export interface SVGResult {
   svg: string
 }
 
+// use getComponentsFromNode to retrieve components to extract SVGs for
 export const getSVGsFromComponents = (
   key: string,
   token: string,

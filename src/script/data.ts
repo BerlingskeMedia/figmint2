@@ -14,7 +14,7 @@ import {
 import { fetchImageUrls } from './images'
 import { getStylesFromFile } from './style'
 import { DownloadListType } from './types'
-import { writeToFile } from './write-file'
+import { writeStylesToFile } from './write-file'
 
 export interface FetchData {
   client: Figma.ClientInterface
@@ -169,7 +169,7 @@ export const fetchData = async ({
 
   const options = await prettier.resolveConfig(output)
 
-  writeToFile({
+  writeStylesToFile({
     typescript,
     options,
     output,

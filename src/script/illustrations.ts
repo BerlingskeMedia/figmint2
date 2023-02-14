@@ -1,27 +1,11 @@
 // see https://medium.com/iadvize-engineering/using-figma-api-to-extract-illustrations-and-icons-34e0c7c230fa
 
 import { getNamesFromProperties } from './names'
+import { fetchFigmaFile, getComponentsFromNode } from './utils'
 
 export const getIllustrationName = (componentName: string) => {
   const { name } = getNamesFromProperties(componentName)
   return name
-}
-
-const fetchFigmaFile = (key: string, token: string) => {
-  return fetch(`https://api.figma.com/v1/files/${key}`, {
-    headers: { 'X-Figma-Token': token },
-  }).then((response) => response.json())
-}
-
-const flatten = (acc: any[], cur: any[]) => [...acc, ...cur]
-const getComponentsFromNode = (node: any): any[] => {
-  if (node.type === 'COMPONENT') {
-    return [node]
-  }
-  if ('children' in node) {
-    return node.children.map(getComponentsFromNode).reduce(flatten, [])
-  }
-  return []
 }
 
 export const fetchIllustrationsFromFigmaFile = async (

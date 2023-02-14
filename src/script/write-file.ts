@@ -3,7 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import prettier from 'prettier'
 
-const toDisplayArr = (list: any[]) =>
+export const toDisplayArr = (list: any[]) =>
   util.inspect(list, {
     depth: Infinity,
     compact: false,
@@ -40,7 +40,7 @@ export const fileContent = ({
     export default styles`
 }
 
-export const writeToFile = (props: any) => {
+export const writeStylesToFile = (props: any) => {
   const { typescript, options, output } = props
   const fileName = `index.${typescript ? 'ts' : 'js'}`
   const newContent = fileContent(props)
