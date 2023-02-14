@@ -157,20 +157,46 @@ fetchIllustrationsFromFigmaFile(fileKey, token): Promise<string[]>
 
 See [Figma tokens automatically turned into code: how we kickstarted our design system](https://medium.com/iadvize-engineering/figma-tokens-automatically-turned-into-code-how-we-kickstarted-our-design-system-3d4134aa1a00)
 
-Get SVGs from components in Figma file
+Get SVGs from components in Figma file. `getSVGsFromComponents` is a factory function which returns an async function that can be called with a list of components to return a list of SVG results with SVG data that can be stored somewhere, either locally or in the cloud.
+
+```ts
+getSVGsFromComponents(key: string, token: string): (components: any[]): Promise<SVGResult[]>
+```
+
+Use `getComponentsFromNode` to retrieve components to extract SVGs for
+
+```js
+[
+  {
+    id: '2:3',
+    name: 'name=page',
+    type: 'COMPONENT',
+    blendMode: 'PASS_THROUGH',
+    children
+    …
+  }, {
+    name: 'name=person-chating',
+    …
+  }, {
+    name: 'name=build',
+    …
+  }
+]
+```
+
+Sample code for `getSVGsFromComponents`
 
 ```ts
 interface SVGResult {
   name: {
-    size: string,
+    size: string
     name: string
-  },
-  fileName: string,
+  }
+  fileName: string
   svg: string
 }
 
-getSVGsFromComponents(key: string, token: string): (components: any[]) => Promise<SVGResult[]>
-
+const components = getComponentsFromNode(node)
 const getSVGs = getSVGsFromComponents(key, token)
 const results: SVGResult[] = await getSVGs(components)
 ```
