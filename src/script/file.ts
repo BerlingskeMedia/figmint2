@@ -7,7 +7,7 @@ const fetchFigmaFile = (key: string, token: string) => {
 }
 
 const flatten = (acc: any[], cur: any[]) => [...acc, ...cur]
-const getComponentsFromNode = (node: any) => {
+const getComponentsFromNode = (node: any): any[] => {
   if (node.type === 'COMPONENT') {
     return [node]
   }
@@ -17,16 +17,19 @@ const getComponentsFromNode = (node: any) => {
   return []
 }
 
-export const run = async (fileKey: string, token: string) => {
+export const fetchIllustrationsFromFigmaFile = async (
+  fileKey: string,
+  token: string,
+): Promise<string[]> => {
   if (!token) {
     console.error(
       'The Figma API token is not defined, you need to set an environment variable `FIGMA_API_TOKEN` to run the script',
     )
-    return
+    return []
   }
-  fetchFigmaFile(fileKey, token)
+  return fetchFigmaFile(fileKey, token)
     .then((data) => getComponentsFromNode(data.document))
-    .then((components) =>
+    .then((components: any[]) =>
       components.map(({ name }: any) => getIllustrationName(name)),
     )
 }
@@ -61,9 +64,19 @@ export const getIconNames = (componentName: string) => {
   return { size, name }
 }
 
-export const getSVGsFromComponents = (key: string, token: string) => (
-  components: any[],
-) => {
+export interface SVGResult {
+  name: {
+    size: string
+    name: string
+  }
+  fileName: string
+  svg: string
+}
+
+export const getSVGsFromComponents = (
+  key: string,
+  token: string,
+): ((components: any[]) => Promise<SVGResult[]>) => (components: any[]) => {
   const ids = components.map(({ id }) => id)
   return fetch(
     `https://api.figma.com/v1/images/${key}?ids=${ids.join()}&format=svg`,
@@ -75,11 +88,13 @@ export const getSVGsFromComponents = (key: string, token: string) => (
         components.map(({ id, name }) =>
           fetch(images[id])
             .then((response) => response.text())
-            .then((svg) => ({
-              name: getIconNames(name), // or "name: getIllustrationName,"
-              fileName: hash(images[id]),
-              svg: formatIconsSVG(svg), // or "svg,"
-            })),
+            .then(
+              (svg): SVGResult => ({
+                name: getIconNames(name), // or "name: getIllustrationName,"
+                fileName: hash(images[id]),
+                svg: formatIconsSVG(svg), // or "svg,"
+              }),
+            ),
         ),
       ),
     )

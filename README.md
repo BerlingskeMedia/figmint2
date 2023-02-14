@@ -122,6 +122,38 @@ export const fetchData = async ({
 }: FetchData): Promise<void>
 ```
 
+### Illustrations
+
+Return illustration names from figma file
+
+```ts
+fetchIllustrationsFromFigmaFile(fileKey, token): Promise<string[]>
+```
+
+### SVGs and Icons
+
+See [Figma tokens automatically turned into code: how we kickstarted our design system](https://medium.com/iadvize-engineering/figma-tokens-automatically-turned-into-code-how-we-kickstarted-our-design-system-3d4134aa1a00)
+
+Get SVGs from components in Figma file
+
+```ts
+interface SVGResult {
+  name: {
+    size: string,
+    name: string
+  },
+  fileName: string,
+  svg: string
+}
+
+getSVGsFromComponents(key: string, token: string): (components: any[]) => Promise<SVGResult[]>
+
+const getSVGs = getSVGsFromComponents(key, token)
+const results: SVGResult[] = await getSVGs(components)
+```
+
+It’s now up to you to upload each image as a separate file to your servers.
+
 ## CLI
 
 The CLI for figmint is pretty simple, just run `yarn figmint` or `npm run figmint` in your project after it is installed.

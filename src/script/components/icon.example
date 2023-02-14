@@ -10,45 +10,68 @@ type Props<T extends IconSize> = {
   const craftUri = <T extends IconSize>(size: T,name: IconName<T>)
   => `${publicPath}/${ICON[size][name]}.svg`;
 
-  export function Icon<T extends IconSize>({
-    title,
-    size,
-    name,
-    color,
-  }: Props<T>) {
-    const url = craftUri(name, size);
-    const [icon, setIcon] = useState<string>(cache.get(url) || '');
-  
-    useEffect(() => {
-      let cancelFetch = false;
-      fetchSvg(name, size)
-        .then(value => {
-          if (!cancelFetch) {
-            setIcon(value as string);
+const cache = new Map<string, string>();
+const fetchSvg = <T extends IconSize>(
+  name: IconName<T>,
+  size: T,
+): Promise<string> =>
+  Promise.resolve()
+    .then(craftUri(name, size))
+    .then(url =>
+      cache.has(url)
+        ? cache.get(url)
+        : fetch(url).then(response => {
+          if (response.ok) {
+            return response.text()
+              .then(svg => {
+                const sanitizedSvg = sanitize(svg);
+                cache.set(url, sanitizedSvg);
+                return sanitizedSvg;
+              });
           }
+          throw new Error('Something went wrong');
         });
-      return () => {
-        cancelFetch = true;
-      };
-    }, [size, name]);
-  
-    return (
-      <span
-        aria-label={title}
-        aria-hidden={!title}
-        role="img"
-        style={{
-        width: `${ICON_SIZE[size]}rem`,
-        height: `${ICON_SIZE[size]}rem`,
-        fontSize: `${ICON_SIZE[size]}rem`,
-        display: 'inline-flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flex: 'none',
-        overflow: 'hidden',
-        color: color ? color : 'currentColor',
-        }}
-        dangerouslySetInnerHTML={{ __html: icon }}
-      />
     );
-  }
+
+export function Icon<T extends IconSize>({
+  title,
+  size,
+  name,
+  color,
+}: Props<T>) {
+  const url = craftUri(name, size);
+  const [icon, setIcon] = useState<string>(cache.get(url) || '');
+
+  useEffect(() => {
+    let cancelFetch = false;
+    fetchSvg(name, size)
+      .then(value => {
+        if (!cancelFetch) {
+          setIcon(value as string);
+        }
+      });
+    return () => {
+      cancelFetch = true;
+    };
+  }, [size, name]);
+
+  return (
+    <span
+      aria-label={title}
+      aria-hidden={!title}
+      role="img"
+      style={{
+      width: `${ICON_SIZE[size]}rem`,
+      height: `${ICON_SIZE[size]}rem`,
+      fontSize: `${ICON_SIZE[size]}rem`,
+      display: 'inline-flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flex: 'none',
+      overflow: 'hidden',
+      color: color ? color : 'currentColor',
+      }}
+      dangerouslySetInnerHTML={{ __html: icon }}
+    />
+  );
+}
