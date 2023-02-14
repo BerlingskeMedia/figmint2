@@ -91,7 +91,7 @@ const templateJSON = (styles: any[]) => {
 const createDir = (path: string) => {
   try {
     mkdirSync(path)
-  } catch (e) {
+  } catch (e: any) {
     if (e.code !== 'EEXIST') {
       // we don't mind if the folder already exists
       throw e
