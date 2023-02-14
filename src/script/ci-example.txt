@@ -1,0 +1,41 @@
+# Make any failure exit script
+set -eo pipefail
+
+# Install and extract our tokens
+npm ci
+npm run build
+
+# Identify changes in the generated code via git
+sed -i.bak '/dist/d' .gitignore && rm .gitignore.bak
+DIST_CHANGED=$(git status - porcelain dist)
+
+# If no changes are made: everything's good => exit
+if [ -z "${DIST_CHANGED}" ]; then
+echo "Dist has not changed. Nothing to do. Exiting."
+exit 0
+fi
+
+# Compute a new library version based on our generated VERSION_BUMP_TYPE
+VERSION_BUMP_TYPE=$(cat ./VERSION_BUMP_TYPE)
+if [ $VERSION_BUMP_TYPE == 'MAJOR' ]; then
+npm version major
+else
+npm version minor
+fi
+
+# Retrieve the package's name and version and publish
+NAME=$(cat package.json | jq -r ".name")
+NEW_VERSION=$(cat package.json | jq -r ".version")
+echo "Publishing package …"
+npm publish
+
+# Keep track of our current state by pushing updates on the release branch
+echo "Creating commit …"
+git add .
+TAG=$NAME@$NEW_VERSION
+git commit -m $TAG
+git tag -a $TAG -m $TAG
+
+echo "Push release branch with tag …"
+git config push.default simple
+git push - follow-tags
