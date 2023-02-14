@@ -122,6 +122,25 @@ export const fetchData = async ({
 }: FetchData): Promise<void>
 ```
 
+### Colors
+
+Return colors names from figma file
+
+Set `process.env.FIGMA_API_TOKEN` as Figma API token value
+
+```ts
+getColors(fileKey): Promise<string[]>
+```
+
+Currently hardcoded to save colors to a `build` folder as follows
+
+```
+/build
+  colors.scss
+  colors.ts
+  colors.json
+```
+
 ### Illustrations
 
 Return illustration names from figma file
@@ -130,7 +149,7 @@ Return illustration names from figma file
 fetchIllustrationsFromFigmaFile(fileKey, token): Promise<string[]>
 ```
 
-### SVGs and Icons
+### Icon SVGs
 
 See [Figma tokens automatically turned into code: how we kickstarted our design system](https://medium.com/iadvize-engineering/figma-tokens-automatically-turned-into-code-how-we-kickstarted-our-design-system-3d4134aa1a00)
 

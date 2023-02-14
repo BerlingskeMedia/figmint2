@@ -1,3 +1,6 @@
+export * from './names'
 export * from './data'
 export * from './images'
-export * from './file'
+export * from './icons'
+export * from './colors'
+export * from './illustrations'
