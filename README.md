@@ -124,15 +124,17 @@ export const fetchData = async ({
 
 ### Colors
 
-Return colors names from figma file
+See [Using the Figma API to get colors](https://medium.com/@nicolas.declercq/figma-tokens-automatically-turned-into-code-how-we-kickstarted-our-design-system-f25866c9d842)
 
-Set `process.env.FIGMA_API_TOKEN` as Figma API token value
+Retrieve and store colors from figma file (hardcoded to get from fills with `ELLIPSE` style as per `const isColor = isEllipse`)
+
+You can pass a `token` as argument or set `process.env.FIGMA_API_TOKEN` as Figma API token value
 
 ```ts
-getColors(fileKey): Promise<string[]>
+getColors(fileKey, {token, genFiles}): Promise<string[]>
 ```
 
-Currently hardcoded to save colors to a `build` folder as follows
+Currently hardcoded to save colors to a `build` folder as follows.
 
 ```
 /build
@@ -140,6 +142,8 @@ Currently hardcoded to save colors to a `build` folder as follows
   colors.ts
   colors.json
 ```
+
+You can pass in a custom `genFiles` function in the optional `options`argument
 
 ### Illustrations
 

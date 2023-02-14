@@ -1,3 +1,5 @@
+// see https://medium.com/@nicolas.declercq/figma-tokens-automatically-turned-into-code-how-we-kickstarted-our-design-system-f25866c9d842
+
 const { writeFileSync, mkdirSync, readFileSync } = require('fs')
 const nodeFetch = require('node-fetch')
 const TOKEN = process.env.FIGMA_API_TOKEN
@@ -6,15 +8,17 @@ const isDefined = (node: any) => node != null
 const isLeaf = (node: any) => isDefined(node) && !('children' in node)
 const isEllipse = (node: any) => isDefined(node) && node.type === 'ELLIPSE'
 
-const fetchFigmaFile = (key: string) => {
+const fetchFigmaFile = (key: string, token = TOKEN) => {
   return nodeFetch(`https://api.figma.com/v1/files/${key}`, {
-    headers: { 'X-Figma-Token': TOKEN },
+    headers: { 'X-Figma-Token': token },
   }).then((response: any) => response.json())
 }
 
+const isColor = isEllipse
+
 const findStyleInTree = (root: any, styleId: string) => {
   if (isLeaf(root)) {
-    return isEllipse(root) && root.styles && root.styles.fill === styleId
+    return isColor(root) && root.styles && root.styles.fill === styleId
       ? root
       : undefined
   }
@@ -172,7 +176,12 @@ const createVersionBumpType = (lastState: any) =>
     .then(getVersionType)
     .then((versionType) => writeFileSync('./VERSION_BUMP_TYPE', versionType))
 
-export async function getColors(fileKey: string): Promise<boolean> {
+export async function getColors(
+  fileKey: string,
+  opts: any = {},
+): Promise<boolean> {
+  const { token } = opts
+  const genFiles = opts.genFiles || generateFiles
   if (!TOKEN) {
     console.error(
       'The Figma API token is not defined, you need to set an environment variable `FIGMA_API_TOKEN` to run the script',
@@ -182,9 +191,9 @@ export async function getColors(fileKey: string): Promise<boolean> {
 
   const lastState = await getState()
 
-  return fetchFigmaFile(fileKey)
+  return fetchFigmaFile(fileKey, token)
     .then(getStyleColors)
-    .then(generateFiles)
+    .then(genFiles)
     .then(() => createVersionBumpType(lastState))
     .then(() => {
       console.log('Done')
