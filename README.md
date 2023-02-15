@@ -122,6 +122,52 @@ export const fetchData = async ({
 }: FetchData): Promise<void>
 ```
 
+Sample usage as script
+
+```ts
+const typescript = true
+const output = './figma-data'
+const file = process.env.FIGMA_FILE
+
+export const data = await fetchData({
+  client,
+  file,
+  output,
+  typescript,
+})
+```
+
+Sample output to `ìndex.ts` file in `output` dir of choice
+
+```ts
+const styles = {
+  colors: [
+    // ...
+  ],
+  gradients: [
+    // ...
+  ],
+  imageFills: [
+    // ...
+  ],
+  textStyles: [
+    // ...
+  ],
+  effectStyles: [
+    // ...
+  ],
+  raw: [
+    // ...
+  ],
+}
+
+export type ColorValues = keyof typeof styles.colors
+export type GradientValues = keyof typeof styles.gradients
+export type TextValues = keyof typeof styles.textStyles
+export type EffectValues = keyof typeof styles.effectStyles
+export default styles
+```
+
 ### Colors
 
 See [Using the Figma API to get colors](https://medium.com/@nicolas.declercq/figma-tokens-automatically-turned-into-code-how-we-kickstarted-our-design-system-f25866c9d842)
@@ -136,7 +182,7 @@ getColors(fileKey, {token, genFiles}): Promise<string[]>
 
 Currently hardcoded to save colors to a `build` folder as follows.
 
-```
+```text
 /build
   colors.scss
   colors.ts
@@ -184,7 +230,7 @@ Use `getComponentsFromNode` to retrieve components to extract SVGs for
 ]
 ```
 
-Sample code for `getSVGsFromComponents`
+SVG results are saved as a list of `SVGResult`
 
 ```ts
 interface SVGResult {
@@ -195,7 +241,11 @@ interface SVGResult {
   fileName: string
   svg: string
 }
+```
 
+Sample usage of `getSVGsFromComponents`
+
+```ts
 const components = getComponentsFromNode(node)
 const getSVGs = getSVGsFromComponents(key, token)
 const results: SVGResult[] = await getSVGs(components)
